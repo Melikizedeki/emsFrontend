@@ -1,8 +1,9 @@
 import axios from "axios";
 
 const api = axios.create({
-  baseURL: import.meta.env.VITE_BACKEND_URL,
-  withCredentials: true, // if backend uses cookies
+  baseURL: "https://emsbackend-mgsf.onrender.com/api",
+  withCredentials: true, // keep true only if you use cookies
 });
 
 export default api;
+
