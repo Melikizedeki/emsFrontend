@@ -12,7 +12,7 @@ const StaffAttendance = () => {
 
   // Company geofence setup
   const COMPANY_CENTER = { lat: -3.69017, lng: 33.41387 };
-  const GEOFENCE_RADIUS = 30000000; // meters
+  const GEOFENCE_RADIUS = 100; // meters
 
   // Convert degrees to radians and compute distance (Haversine)
   const haversineDistance = (lat1, lon1, lat2, lon2) => {
