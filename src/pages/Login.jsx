@@ -19,7 +19,7 @@ const Login = () => {
     setError("");
 
     try {
-      const res = await api.post("/api/login", values);
+      const res = await api.post("/api/credential/login", values);
 
       if (res.data.loginStatus) {
         const role = res.data.role.toLowerCase();
