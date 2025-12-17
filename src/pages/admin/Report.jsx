@@ -219,6 +219,7 @@ const Report = () => {
               <option value="first">Jan – Jun</option>
               <option value="second">Jul – Dec</option>
               <option value="month">Monthly</option>
+               <option value="month">date</option>
             </select>
 
             <select
