@@ -24,6 +24,7 @@ const Report = () => {
     "July","August","September","October","November","December"
   ];
 
+  // ================== FETCH PERFORMANCE ==================
   const fetchPerformance = async () => {
     setLoading(true);
     try {
@@ -40,6 +41,7 @@ const Report = () => {
     }
   };
 
+  // ================== FETCH PAYROLL ==================
   const fetchPayroll = async () => {
     setLoading(true);
     try {
@@ -67,7 +69,6 @@ const Report = () => {
 
   return (
     <div className="p-6 bg-gray-50 min-h-screen">
-
       {/* TABS */}
       <div className="flex gap-4 mb-6">
         <button onClick={() => setActiveTab("performance")}>
@@ -81,7 +82,6 @@ const Report = () => {
       {/* ================= PERFORMANCE ================= */}
       {activeTab === "performance" && (
         <div className="bg-white p-6 rounded shadow">
-
           <h2 className="text-xl font-semibold mb-4">Performance Report</h2>
 
           {/* FILTERS */}
@@ -151,6 +151,8 @@ const Report = () => {
                 <th>Punctuality</th>
                 <th>Total</th>
                 <th>Remarks</th>
+                {/* ✅ Show Daily Record column if date selected */}
+                {date && <th>Date</th>}
               </tr>
             </thead>
             <tbody>
@@ -164,11 +166,12 @@ const Report = () => {
                     <td>{emp.punctuality_rate}%</td>
                     <td>{emp.performance}%</td>
                     <td>{emp.remarks}</td>
+                    {date && <td>{date}</td>}
                   </tr>
                 ))
               ) : (
                 <tr>
-                  <td colSpan="7" className="text-center">No Records</td>
+                  <td colSpan={date ? 8 : 7} className="text-center">No Records</td>
                 </tr>
               )}
             </tbody>
@@ -178,8 +181,7 @@ const Report = () => {
 
       {/* ================= PAYROLL (UNTOUCHED) ================= */}
       {activeTab === "payroll" && (
-         <div className="bg-white p-6 rounded shadow">
-
+        <div className="bg-white p-6 rounded shadow">
           <h2 className="text-xl font-semibold mb-4">Payroll Report</h2>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
@@ -242,39 +244,6 @@ const Report = () => {
                 )}
               </tbody>
             </table>
-
-            {/* PAGINATION */}
-            {payrollData.length > itemsPerPage && (
-              <div className="flex justify-between items-center mt-4 pagination">
-                <button
-                  disabled={currentPage === 1}
-                  onClick={() => setCurrentPage((p) => p - 1)}
-                  className="px-3 py-1 bg-gray-200 rounded disabled:opacity-50"
-                >
-                  Prev
-                </button>
-
-                <span>Page {currentPage} of {totalPagesPayroll}</span>
-
-                <button
-                  disabled={currentPage === totalPagesPayroll}
-                  onClick={() => setCurrentPage((p) => p + 1)}
-                  className="px-3 py-1 bg-gray-200 rounded disabled:opacity-50"
-                >
-                  Next
-                </button>
-              </div>
-            )}
-
-            {/* PAYROLL TOTALS */}
-            {payrollData.length > 0 && (
-              <div className="mt-6 border-t pt-4 text-sm">
-                <p><strong>Total Employees:</strong> {totals.totalEmployees}</p>
-                <p><strong>Total Salary:</strong> {totals.totalSalary.toLocaleString()}</p>
-                <p><strong>Total Deduction:</strong> {totals.totalDeduction.toLocaleString()}</p>
-                <p><strong>Net Salary:</strong> {totals.totalNetSalary.toLocaleString()}</p>
-              </div>
-            )}
           </div>
         </div>
       )}
