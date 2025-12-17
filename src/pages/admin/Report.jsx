@@ -9,6 +9,7 @@ const Report = () => {
   const [year, setYear] = useState(new Date().getFullYear());
   const [period, setPeriod] = useState("");
   const [month, setMonth] = useState("");
+  const [date, setDate] = useState(""); // ✅ Daily report
   const [holidays, setHolidays] = useState("");
 
   const [performanceData, setPerformanceData] = useState([]);
@@ -34,7 +35,7 @@ const Report = () => {
     setLoading(true);
     try {
       const res = await api.get("/api/report/performance/kpi", {
-        params: { year, period, month, holidays },
+        params: { year, period, month, holidays,date },
       });
       setPerformanceData(res.data);
       setCurrentPage(1);
@@ -231,6 +232,13 @@ const Report = () => {
               ))}
             </select>
 
+            <input
+            type="date"
+            value={date}
+             onChange={(e) => setDate(e.target.value)}
+             className="border p-2 rounded"
+            />
+            
             <input
               type="text"
               value={holidays}
