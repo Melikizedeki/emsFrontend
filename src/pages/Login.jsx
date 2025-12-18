@@ -5,7 +5,7 @@ import { motion } from "framer-motion";
 import { MdEmail } from "react-icons/md";
 import { RiLockPasswordFill } from "react-icons/ri";
 import { AiFillEye, AiFillEyeInvisible } from "react-icons/ai";
-import logo from "../assets/fflogo.png"; // Import your logo
+import logo from "../assets/fflogo.png"; // Added logo import
 
 const Login = () => {
   const [values, setValues] = useState({ email: "", password: "" });
@@ -33,7 +33,7 @@ const Login = () => {
         localStorage.setItem("employeeName", res.data.user.name);
 
         if (role === "admin") {
-          navigate("/admin-dashboard", { replace: true });
+          navigate("/admin-dashboard",{ replace: true });
           window.location.reload();
         } else if (role === "staff" || role === "field") {
           navigate("/staff-dashboard");
@@ -58,9 +58,9 @@ const Login = () => {
         transition={{ duration: 0.6 }}
         className="bg-white shadow-3xl rounded-3xl w-full max-w-md p-10 border-t-4 border-[#65b5ff]"
       >
-        {/* 👇 Logo */}
+        {/* 👇 Company Logo */}
         <div className="flex justify-center mb-4">
-          <img src={logo} alt="EMS Logo" className="w-32 h-32 object-contain" />
+          <img src={logo} alt="EMS Logo" className="w-32 h-32 sm:w-40 sm:h-40 object-contain" />
         </div>
 
         {/* 👇 Animated Welcome text */}
