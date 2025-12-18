@@ -19,7 +19,7 @@ import {
   Tooltip,
   Legend,
 } from "chart.js";
-import api from "/config/axios"
+import api from "/config/axios";
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
 
@@ -34,24 +34,26 @@ const Homeadmin = () => {
   const [totalPendingPermissions, setTotalPendingPermissions] = useState(0);
   const [totalEvents, setTotalEvents] = useState(0);
 
-  // Pagination states
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
 
   const formatDateForAPI = (d) => (d instanceof Date ? d.toISOString().split("T")[0] : d);
 
+  // Fetch attendance + summary for selected date
   const fetchAttendance = async (selectedDate) => {
     try {
       const formatted = formatDateForAPI(selectedDate);
+
       const res = await api.get(`/api/admin/attendance/date/${formatted}`);
       setAttendance(res.data);
-      setCurrentPage(1); // reset to first page when date changes
+      setCurrentPage(1);
 
       const sumRes = await api.get(`/api/admin/attendance/summary/${formatted}`);
-      const summaryData = ["Present", "Absent", "Late"].map((s) => ({
-        status: s,
-        count: sumRes.data.find((x) => x.status?.toLowerCase() === s.toLowerCase())?.count || 0,
-      }));
+      const summaryData = [
+        { status: "Present", count: sumRes.data.present || 0 },
+        { status: "Absent", count: sumRes.data.absent || 0 },
+        { status: "Late", count: sumRes.data.late || 0 },
+      ];
       setSummary(summaryData);
     } catch (error) {
       console.error("Fetch error:", error.response?.data || error.message);
@@ -60,6 +62,7 @@ const Homeadmin = () => {
     }
   };
 
+  // Fetch last 7 days data for chart
   const fetchWeeklyData = async (selectedDate) => {
     try {
       const endDate = new Date(selectedDate);
@@ -75,9 +78,9 @@ const Homeadmin = () => {
           const res = await api.get(`/api/admin/attendance/summary/${formatted}`);
           return {
             date: d,
-            present: res.data.find((s) => s.status?.toLowerCase() === "present")?.count || 0,
-            absent: res.data.find((s) => s.status?.toLowerCase() === "absent")?.count || 0,
-            late: res.data.find((s) => s.status?.toLowerCase() === "late")?.count || 0,
+            present: res.data.present || 0,
+            absent: res.data.absent || 0,
+            late: res.data.late || 0,
           };
         })
       );
@@ -94,7 +97,8 @@ const Homeadmin = () => {
       const res = await api.get("/api/employees/total");
       if (res.data.Status) setTotalEmployees(res.data.total);
     } catch (error) {
-      console.error("Error fetching total employees:", error.response?.data || error.message);
+      console.error(error.response?.data || error.message);
+      setTotalEmployees(0);
     }
   };
 
@@ -104,7 +108,7 @@ const Homeadmin = () => {
       const res = await api.get(`/api/pay/month/${month}/total-gross`);
       setTotalSalary(res.data.totalGrossSalary || 0);
     } catch (error) {
-      console.error("Error fetching total salary:", error.response?.data || error.message);
+      console.error(error.response?.data || error.message);
       setTotalSalary(0);
     }
   };
@@ -114,7 +118,7 @@ const Homeadmin = () => {
       const res = await api.get("/api/total");
       if (res.data.Status) setTotalDepartments(res.data.total);
     } catch (error) {
-      console.error("Error fetching total departments:", error.response?.data || error.message);
+      console.error(error.response?.data || error.message);
       setTotalDepartments(0);
     }
   };
@@ -124,7 +128,7 @@ const Homeadmin = () => {
       const res = await api.get("/api/pending-count");
       if (res.data.Status) setTotalPendingPermissions(res.data.total);
     } catch (error) {
-      console.error("Error fetching pending permissions:", error.response?.data || error.message);
+      console.error(error.response?.data || error.message);
       setTotalPendingPermissions(0);
     }
   };
@@ -134,7 +138,7 @@ const Homeadmin = () => {
       const res = await api.get("/api/sum-event");
       if (res.data.Status) setTotalEvents(res.data.total);
     } catch (error) {
-      console.error("Error fetching total events:", error.response?.data || error.message);
+      console.error(error.response?.data || error.message);
       setTotalEvents(0);
     }
   };
@@ -182,12 +186,10 @@ const Homeadmin = () => {
     { title: "Events", value: totalEvents, icon: <CalendarDays className="w-8 h-8" />, bg: "bg-[#3B83BD]", iconBg: "bg-yellow-100 text-yellow-600" },
   ];
 
-  // Pagination logic
   const indexOfLast = currentPage * itemsPerPage;
   const indexOfFirst = indexOfLast - itemsPerPage;
   const currentItems = attendance.slice(indexOfFirst, indexOfLast);
   const totalPages = Math.ceil(attendance.length / itemsPerPage);
-
   const nextPage = () => setCurrentPage((p) => Math.min(p + 1, totalPages));
   const prevPage = () => setCurrentPage((p) => Math.max(p - 1, 1));
 
@@ -305,10 +307,7 @@ const Homeadmin = () => {
               />
             </div>
             <p className="text-sm text-center mt-4 text-gray-500">
-              Selected Date:{" "}
-              <span className="font-medium">
-                {date instanceof Date ? date.toDateString() : date}
-              </span>
+              Selected Date: <span className="font-medium">{date instanceof Date ? date.toDateString() : date}</span>
             </p>
           </div>
 
