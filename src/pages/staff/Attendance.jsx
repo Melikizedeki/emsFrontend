@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import api from "/config/axios"
+import api from "/config/axios";
 
 const StaffAttendance = () => {
   const [numericalId, setNumericalId] = useState(null);
@@ -10,11 +10,9 @@ const StaffAttendance = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const recordsPerPage = 15;
 
-  // Company geofence setup
   const COMPANY_CENTER = { lat: -3.69017, lng: 33.41387 };
   const GEOFENCE_RADIUS = 100; // meters
 
-  // Convert degrees to radians and compute distance (Haversine)
   const haversineDistance = (lat1, lon1, lat2, lon2) => {
     const toRad = (x) => (x * Math.PI) / 180;
     const R = 6371000;
@@ -28,7 +26,6 @@ const StaffAttendance = () => {
     return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
   };
 
-  // Get current location
   const getLocation = () =>
     new Promise((resolve, reject) => {
       if (!navigator.geolocation) return reject("Geolocation not supported");
@@ -39,7 +36,6 @@ const StaffAttendance = () => {
       );
     });
 
-  // ✅ Fetch attendance records for the logged-in staff
   const fetchAttendance = async (id) => {
     try {
       const res = await api.get(`/api/attendance/${id}`);
@@ -50,7 +46,6 @@ const StaffAttendance = () => {
     }
   };
 
-  // ✅ Handle check-in / check-out
   const handleCheck = async (type) => {
     if (!numericalId) return setMessage("⚠️ Employee ID not found");
     setLoading(true);
@@ -73,7 +68,7 @@ const StaffAttendance = () => {
       }
 
       const res = await api.post(`/api/attendance/${type}`, {
-        numerical_id: numericalId,
+        numerical_id: numericalId, // ✅ numeric ID from localStorage
         latitude: loc.latitude,
         longitude: loc.longitude,
       });
@@ -88,7 +83,6 @@ const StaffAttendance = () => {
     }
   };
 
-  // ✅ Check geofence
   const updateGeofenceStatus = async () => {
     try {
       const loc = await getLocation();
@@ -104,7 +98,6 @@ const StaffAttendance = () => {
     }
   };
 
-  // ✅ Initialize when component loads
   useEffect(() => {
     const storedId = localStorage.getItem("employeeId");
     if (!storedId) {
@@ -127,7 +120,6 @@ const StaffAttendance = () => {
     };
   }, []);
 
-  // ✅ Highlight today’s record
   const isToday = (dateString) => {
     const today = new Date().toLocaleDateString("en-GB", {
       timeZone: "Africa/Dar_es_Salaam",
@@ -138,7 +130,6 @@ const StaffAttendance = () => {
     return today === recordDate;
   };
 
-  // ✅ Pagination logic
   const totalPages = Math.ceil(records.length / recordsPerPage);
   const startIndex = (currentPage - 1) * recordsPerPage;
   const currentRecords = records.slice(startIndex, startIndex + recordsPerPage);
@@ -159,9 +150,7 @@ const StaffAttendance = () => {
           onClick={() => handleCheck("checkin")}
           disabled={!insideGeofence || loading}
           className={`w-full md:w-64 py-4 text-xl font-semibold text-white rounded-xl ${
-            insideGeofence
-              ? "bg-green-600 hover:bg-green-700"
-              : "bg-gray-400 cursor-not-allowed"
+            insideGeofence ? "bg-green-600 hover:bg-green-700" : "bg-gray-400 cursor-not-allowed"
           }`}
         >
           Check In
@@ -171,9 +160,7 @@ const StaffAttendance = () => {
           onClick={() => handleCheck("checkout")}
           disabled={!insideGeofence || loading}
           className={`w-full md:w-64 py-4 text-xl font-semibold text-white rounded-xl ${
-            insideGeofence
-              ? "bg-blue-600 hover:bg-blue-700"
-              : "bg-gray-400 cursor-not-allowed"
+            insideGeofence ? "bg-blue-600 hover:bg-blue-700" : "bg-gray-400 cursor-not-allowed"
           }`}
         >
           Check Out
@@ -182,9 +169,7 @@ const StaffAttendance = () => {
 
       {/* Message */}
       {message && (
-        <p className="text-center text-lg font-semibold text-red-600 mb-6">
-          {message}
-        </p>
+        <p className="text-center text-lg font-semibold text-red-600 mb-6">{message}</p>
       )}
 
       {/* Table */}
@@ -201,26 +186,12 @@ const StaffAttendance = () => {
           <tbody>
             {currentRecords.length > 0 ? (
               currentRecords.map((rec, i) => (
-                <tr
-                  key={i}
-                  className={`hover:bg-gray-50 ${
-                    isToday(rec.date) ? "bg-yellow-100 font-semibold" : ""
-                  }`}
-                >
+                <tr key={i} className={`hover:bg-gray-50 ${isToday(rec.date) ? "bg-yellow-100 font-semibold" : ""}`}>
+                  <td className="border px-4 py-3">{new Date(rec.date).toLocaleDateString("en-GB", { timeZone: "Africa/Dar_es_Salaam" })}</td>
+                  <td className="border px-4 py-3">{rec.check_in_time || "-"}</td>
+                  <td className="border px-4 py-3">{rec.check_out_time || "-"}</td>
                   <td className="border px-4 py-3">
-                    {new Date(rec.date).toLocaleDateString("en-GB", {
-                      timeZone: "Africa/Dar_es_Salaam",
-                    })}
-                  </td>
-                  <td className="border px-4 py-3">
-                    {rec.check_in_time || "-"}
-                  </td>
-                  <td className="border px-4 py-3">
-                    {rec.check_out_time || "-"}
-                  </td>
-                  <td className="border px-4 py-3">
-                    <span
-                      className={`px-3 py-1 rounded-full text-white text-sm font-semibold ${
+                    <span className={`px-3 py-1 rounded-full text-white text-sm font-semibold ${
                         rec.status === "present"
                           ? "bg-green-500"
                           : rec.status === "late"
@@ -228,56 +199,38 @@ const StaffAttendance = () => {
                           : rec.status === "pending"
                           ? "bg-gray-400"
                           : "bg-red-500"
-                      }`}
-                    >
-                      {rec.status
-                        ? rec.status.charAt(0).toUpperCase() + rec.status.slice(1)
-                        : "-"}
+                      }`}>
+                      {rec.status ? rec.status.charAt(0).toUpperCase() + rec.status.slice(1) : "-"}
                     </span>
                   </td>
                 </tr>
               ))
             ) : (
               <tr>
-                <td
-                  colSpan="4"
-                  className="border px-4 py-4 text-center text-gray-500"
-                >
-                  No attendance records found
-                </td>
+                <td colSpan="4" className="border px-4 py-4 text-center text-gray-500">No attendance records found</td>
               </tr>
             )}
           </tbody>
         </table>
       </div>
 
-      {/* ✅ Pagination Controls */}
+      {/* Pagination */}
       {records.length > recordsPerPage && (
         <div className="flex justify-center items-center mt-6 gap-2">
           <button
             onClick={() => handlePageChange(currentPage - 1)}
             disabled={currentPage === 1}
-            className={`px-4 py-2 rounded-lg font-semibold ${
-              currentPage === 1
-                ? "bg-gray-300 cursor-not-allowed"
-                : "bg-gray-700 text-white hover:bg-gray-800"
-            }`}
+            className={`px-4 py-2 rounded-lg font-semibold ${currentPage === 1 ? "bg-gray-300 cursor-not-allowed" : "bg-gray-700 text-white hover:bg-gray-800"}`}
           >
             Prev
           </button>
 
-          <span className="text-gray-700 font-medium">
-            Page {currentPage} of {totalPages}
-          </span>
+          <span className="text-gray-700 font-medium">Page {currentPage} of {totalPages}</span>
 
           <button
             onClick={() => handlePageChange(currentPage + 1)}
             disabled={currentPage === totalPages}
-            className={`px-4 py-2 rounded-lg font-semibold ${
-              currentPage === totalPages
-                ? "bg-gray-300 cursor-not-allowed"
-                : "bg-gray-700 text-white hover:bg-gray-800"
-            }`}
+            className={`px-4 py-2 rounded-lg font-semibold ${currentPage === totalPages ? "bg-gray-300 cursor-not-allowed" : "bg-gray-700 text-white hover:bg-gray-800"}`}
           >
             Next
           </button>
