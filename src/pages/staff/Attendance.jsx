@@ -67,8 +67,27 @@ const StaffAttendance = () => {
         return;
       }
 
+      // ✅ Get role from localStorage
+      const role = localStorage.getItem("role") || "staff";
+      const dayOfWeek = new Date().toLocaleString("en-GB", {
+        timeZone: "Africa/Dar_es_Salaam",
+        weekday: "long",
+      });
+      const currentTime = new Date().toLocaleTimeString("en-GB", {
+        hour12: false,
+        timeZone: "Africa/Dar_es_Salaam",
+      });
+
+      if (type === "checkout" && role === "staff" && dayOfWeek === "Tuesday") {
+        if (currentTime < "13:00:00") {
+          setMessage("⚠️ Staff can checkout after 13:00 on Tuesday");
+          setLoading(false);
+          return;
+        }
+      }
+
       const res = await api.post(`/api/attendance/${type}`, {
-        numerical_id: numericalId, // ✅ numeric ID from localStorage
+        numerical_id: numericalId,
         latitude: loc.latitude,
         longitude: loc.longitude,
       });
