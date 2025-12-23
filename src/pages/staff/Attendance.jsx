@@ -65,22 +65,59 @@ const StaffAttendance = () => {
         return;
       }
 
-      // ✅ Staff role and time check for Tuesday
       const role = localStorage.getItem("role") || "staff";
       const dayOfWeek = new Date().toLocaleDateString("en-GB", { weekday: "long", timeZone: "Africa/Dar_es_Salaam" });
-      const [hours, minutes, seconds] = new Date().toLocaleTimeString("en-GB", {
-        hour12: false,
-        timeZone: "Africa/Dar_es_Salaam",
-      }).split(":").map(Number);
 
+      const now = new Date();
+      const currentTime = now.toLocaleTimeString("en-GB", { hour12: false, timeZone: "Africa/Dar_es_Salaam" });
+      const [hours, minutes, seconds] = currentTime.split(":").map(Number);
       const currentTimeInSeconds = hours * 3600 + minutes * 60 + seconds;
-      const thirteenInSeconds = 13 * 3600; // 13:00:00
 
+      // Tuesday staff rule
+      const thirteenInSeconds = 13 * 3600;
       if (type === "checkout" && role === "staff" && dayOfWeek === "Tuesday") {
         if (currentTimeInSeconds < thirteenInSeconds) {
           setMessage("⚠️ Staff can checkout after 13:00 on Tuesday");
           setLoading(false);
           return;
+        }
+      }
+
+      // Day shift checkout 18:00-18:59
+      const eighteenInSeconds = 18 * 3600;
+      const eighteen59InSeconds = 18 * 3600 + 59 * 60 + 59;
+
+      // Night shift checkout 06:00-07:55
+      const sixInSeconds = 6 * 3600;
+      const seven55InSeconds = 7 * 3600 + 55 * 60;
+
+      const todayRecord = records.find(r => {
+        const rDate = new Date(r.date).toLocaleDateString("en-GB", { timeZone: "Africa/Dar_es_Salaam" });
+        const today = new Date().toLocaleDateString("en-GB", { timeZone: "Africa/Dar_es_Salaam" });
+        return rDate === today;
+      });
+
+      if (type === "checkout" && todayRecord && todayRecord.check_in_time) {
+        const ci = todayRecord.check_in_time;
+        const [ciH, ciM, ciS] = ci.split(":").map(Number);
+        const ciInSeconds = ciH * 3600 + ciM * 60 + ciS;
+
+        // Day shift 07:30–09:00
+        if (ciInSeconds >= 7 * 3600 + 30 * 60 && ciInSeconds <= 9 * 3600) {
+          if (!(currentTimeInSeconds >= eighteenInSeconds && currentTimeInSeconds <= eighteen59InSeconds)) {
+            setMessage("⚠️ Day shift checkout allowed only 18:00–18:59");
+            setLoading(false);
+            return;
+          }
+        }
+
+        // Night shift 19:30–21:00
+        else if (ciInSeconds >= 19 * 3600 + 30 * 60 && ciInSeconds <= 21 * 3600) {
+          if (!(currentTimeInSeconds >= sixInSeconds && currentTimeInSeconds <= seven55InSeconds)) {
+            setMessage("⚠️ Night shift checkout allowed only 06:00–07:55");
+            setLoading(false);
+            return;
+          }
         }
       }
 
@@ -121,7 +158,6 @@ const StaffAttendance = () => {
       setMessage("⚠️ Employee not logged in");
       return;
     }
-
     const id = Number(storedId);
     setNumericalId(id);
     fetchAttendance(id);
@@ -146,36 +182,13 @@ const StaffAttendance = () => {
   const startIndex = (currentPage - 1) * recordsPerPage;
   const currentRecords = records.slice(startIndex, startIndex + recordsPerPage);
 
-  const handlePageChange = (page) => {
-    if (page >= 1 && page <= totalPages) setCurrentPage(page);
-  };
-
   return (
     <div>
-      <h1 className="text-3xl md:text-4xl font-bold mb-8 text-center text-gray-800">
-        Staff Attendance
-      </h1>
+      <h1 className="text-3xl md:text-4xl font-bold mb-8 text-center text-gray-800">Staff Attendance</h1>
 
       <div className="flex flex-col md:flex-row justify-center items-center gap-6 mb-6">
-        <button
-          onClick={() => handleCheck("checkin")}
-          disabled={!insideGeofence || loading}
-          className={`w-full md:w-64 py-4 text-xl font-semibold text-white rounded-xl ${
-            insideGeofence ? "bg-green-600 hover:bg-green-700" : "bg-gray-400 cursor-not-allowed"
-          }`}
-        >
-          Check In
-        </button>
-
-        <button
-          onClick={() => handleCheck("checkout")}
-          disabled={!insideGeofence || loading}
-          className={`w-full md:w-64 py-4 text-xl font-semibold text-white rounded-xl ${
-            insideGeofence ? "bg-blue-600 hover:bg-blue-700" : "bg-gray-400 cursor-not-allowed"
-          }`}
-        >
-          Check Out
-        </button>
+        <button onClick={() => handleCheck("checkin")} disabled={!insideGeofence || loading} className={`w-full md:w-64 py-4 text-xl font-semibold text-white rounded-xl ${insideGeofence ? "bg-green-600 hover:bg-green-700" : "bg-gray-400 cursor-not-allowed"}`}>Check In</button>
+        <button onClick={() => handleCheck("checkout")} disabled={!insideGeofence || loading} className={`w-full md:w-64 py-4 text-xl font-semibold text-white rounded-xl ${insideGeofence ? "bg-blue-600 hover:bg-blue-700" : "bg-gray-400 cursor-not-allowed"}`}>Check Out</button>
       </div>
 
       {message && <p className="text-center text-lg font-semibold text-red-600 mb-6">{message}</p>}
@@ -201,39 +214,19 @@ const StaffAttendance = () => {
                     rec.status === "present" ? "bg-green-500" :
                     rec.status === "late" ? "bg-yellow-500" :
                     rec.status === "pending" ? "bg-gray-400" : "bg-red-500"
-                  }`}>
-                    {rec.status ? rec.status.charAt(0).toUpperCase() + rec.status.slice(1) : "-"}
-                  </span>
+                  }`}>{rec.status ? rec.status.charAt(0).toUpperCase() + rec.status.slice(1) : "-"}</span>
                 </td>
               </tr>
-            )) : (
-              <tr>
-                <td colSpan="4" className="border px-4 py-4 text-center text-gray-500">No attendance records found</td>
-              </tr>
-            )}
+            )) : <tr><td colSpan="4" className="border px-4 py-4 text-center text-gray-500">No attendance records found</td></tr>}
           </tbody>
         </table>
       </div>
 
       {records.length > recordsPerPage && (
         <div className="flex justify-center items-center mt-6 gap-2">
-          <button
-            onClick={() => handlePageChange(currentPage - 1)}
-            disabled={currentPage === 1}
-            className={`px-4 py-2 rounded-lg font-semibold ${currentPage === 1 ? "bg-gray-300 cursor-not-allowed" : "bg-gray-700 text-white hover:bg-gray-800"}`}
-          >
-            Prev
-          </button>
-
+          <button onClick={() => setCurrentPage(currentPage - 1)} disabled={currentPage === 1} className={`px-4 py-2 rounded-lg font-semibold ${currentPage === 1 ? "bg-gray-300 cursor-not-allowed" : "bg-gray-700 text-white hover:bg-gray-800"}`}>Prev</button>
           <span className="text-gray-700 font-medium">Page {currentPage} of {totalPages}</span>
-
-          <button
-            onClick={() => handlePageChange(currentPage + 1)}
-            disabled={currentPage === totalPages}
-            className={`px-4 py-2 rounded-lg font-semibold ${currentPage === totalPages ? "bg-gray-300 cursor-not-allowed" : "bg-gray-700 text-white hover:bg-gray-800"}`}
-          >
-            Next
-          </button>
+          <button onClick={() => setCurrentPage(currentPage + 1)} disabled={currentPage === totalPages} className={`px-4 py-2 rounded-lg font-semibold ${currentPage === totalPages ? "bg-gray-300 cursor-not-allowed" : "bg-gray-700 text-white hover:bg-gray-800"}`}>Next</button>
         </div>
       )}
     </div>
