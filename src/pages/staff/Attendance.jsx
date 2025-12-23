@@ -11,7 +11,7 @@ const StaffAttendance = () => {
   const recordsPerPage = 15;
 
   const COMPANY_CENTER = { lat: -4.822958, lng: 34.76901956 };
-  const GEOFENCE_RADIUS = 1000; // meters
+  const GEOFENCE_RADIUS = 1000;
 
   const haversineDistance = (lat1, lon1, lat2, lon2) => {
     const toRad = (x) => (x * Math.PI) / 180;
@@ -20,9 +20,7 @@ const StaffAttendance = () => {
     const dLon = toRad(lon2 - lon1);
     const a =
       Math.sin(dLat / 2) ** 2 +
-      Math.cos(toRad(lat1)) *
-        Math.cos(toRad(lat2)) *
-        Math.sin(dLon / 2) ** 2;
+      Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon / 2) ** 2;
     return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
   };
 
@@ -67,19 +65,19 @@ const StaffAttendance = () => {
         return;
       }
 
-      // ✅ Get role from localStorage
+      // ✅ Staff role and time check for Tuesday
       const role = localStorage.getItem("role") || "staff";
-      const dayOfWeek = new Date().toLocaleString("en-GB", {
-        timeZone: "Africa/Dar_es_Salaam",
-        weekday: "long",
-      });
-      const currentTime = new Date().toLocaleTimeString("en-GB", {
+      const dayOfWeek = new Date().toLocaleDateString("en-GB", { weekday: "long", timeZone: "Africa/Dar_es_Salaam" });
+      const [hours, minutes, seconds] = new Date().toLocaleTimeString("en-GB", {
         hour12: false,
         timeZone: "Africa/Dar_es_Salaam",
-      });
+      }).split(":").map(Number);
+
+      const currentTimeInSeconds = hours * 3600 + minutes * 60 + seconds;
+      const thirteenInSeconds = 13 * 3600; // 13:00:00
 
       if (type === "checkout" && role === "staff" && dayOfWeek === "Tuesday") {
-        if (currentTime < "13:00:00") {
+        if (currentTimeInSeconds < thirteenInSeconds) {
           setMessage("⚠️ Staff can checkout after 13:00 on Tuesday");
           setLoading(false);
           return;
@@ -126,7 +124,6 @@ const StaffAttendance = () => {
 
     const id = Number(storedId);
     setNumericalId(id);
-
     fetchAttendance(id);
     updateGeofenceStatus();
 
@@ -140,12 +137,8 @@ const StaffAttendance = () => {
   }, []);
 
   const isToday = (dateString) => {
-    const today = new Date().toLocaleDateString("en-GB", {
-      timeZone: "Africa/Dar_es_Salaam",
-    });
-    const recordDate = new Date(dateString).toLocaleDateString("en-GB", {
-      timeZone: "Africa/Dar_es_Salaam",
-    });
+    const today = new Date().toLocaleDateString("en-GB", { timeZone: "Africa/Dar_es_Salaam" });
+    const recordDate = new Date(dateString).toLocaleDateString("en-GB", { timeZone: "Africa/Dar_es_Salaam" });
     return today === recordDate;
   };
 
@@ -163,7 +156,6 @@ const StaffAttendance = () => {
         Staff Attendance
       </h1>
 
-      {/* Buttons */}
       <div className="flex flex-col md:flex-row justify-center items-center gap-6 mb-6">
         <button
           onClick={() => handleCheck("checkin")}
@@ -186,12 +178,8 @@ const StaffAttendance = () => {
         </button>
       </div>
 
-      {/* Message */}
-      {message && (
-        <p className="text-center text-lg font-semibold text-red-600 mb-6">{message}</p>
-      )}
+      {message && <p className="text-center text-lg font-semibold text-red-600 mb-6">{message}</p>}
 
-      {/* Table */}
       <div className="overflow-x-auto shadow-sm">
         <table className="w-full border border-gray-300 text-left">
           <thead className="bg-gray-100">
@@ -203,28 +191,22 @@ const StaffAttendance = () => {
             </tr>
           </thead>
           <tbody>
-            {currentRecords.length > 0 ? (
-              currentRecords.map((rec, i) => (
-                <tr key={i} className={`hover:bg-gray-50 ${isToday(rec.date) ? "bg-yellow-100 font-semibold" : ""}`}>
-                  <td className="border px-4 py-3">{new Date(rec.date).toLocaleDateString("en-GB", { timeZone: "Africa/Dar_es_Salaam" })}</td>
-                  <td className="border px-4 py-3">{rec.check_in_time || "-"}</td>
-                  <td className="border px-4 py-3">{rec.check_out_time || "-"}</td>
-                  <td className="border px-4 py-3">
-                    <span className={`px-3 py-1 rounded-full text-white text-sm font-semibold ${
-                        rec.status === "present"
-                          ? "bg-green-500"
-                          : rec.status === "late"
-                          ? "bg-yellow-500"
-                          : rec.status === "pending"
-                          ? "bg-gray-400"
-                          : "bg-red-500"
-                      }`}>
-                      {rec.status ? rec.status.charAt(0).toUpperCase() + rec.status.slice(1) : "-"}
-                    </span>
-                  </td>
-                </tr>
-              ))
-            ) : (
+            {currentRecords.length > 0 ? currentRecords.map((rec, i) => (
+              <tr key={i} className={`hover:bg-gray-50 ${isToday(rec.date) ? "bg-yellow-100 font-semibold" : ""}`}>
+                <td className="border px-4 py-3">{new Date(rec.date).toLocaleDateString("en-GB", { timeZone: "Africa/Dar_es_Salaam" })}</td>
+                <td className="border px-4 py-3">{rec.check_in_time || "-"}</td>
+                <td className="border px-4 py-3">{rec.check_out_time || "-"}</td>
+                <td className="border px-4 py-3">
+                  <span className={`px-3 py-1 rounded-full text-white text-sm font-semibold ${
+                    rec.status === "present" ? "bg-green-500" :
+                    rec.status === "late" ? "bg-yellow-500" :
+                    rec.status === "pending" ? "bg-gray-400" : "bg-red-500"
+                  }`}>
+                    {rec.status ? rec.status.charAt(0).toUpperCase() + rec.status.slice(1) : "-"}
+                  </span>
+                </td>
+              </tr>
+            )) : (
               <tr>
                 <td colSpan="4" className="border px-4 py-4 text-center text-gray-500">No attendance records found</td>
               </tr>
@@ -233,7 +215,6 @@ const StaffAttendance = () => {
         </table>
       </div>
 
-      {/* Pagination */}
       {records.length > recordsPerPage && (
         <div className="flex justify-center items-center mt-6 gap-2">
           <button
