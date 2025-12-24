@@ -76,7 +76,7 @@ const StaffAttendance = () => {
       // Tuesday staff rule
 
       // Wednesday staff rule
-const thirteenInSeconds = 09 * 3600;
+const thirteenInSeconds = 9 * 3600;
 
 if (type === "checkout" && role === "staff" && dayOfWeek === "Wednesday") {
   if (currentTimeInSeconds < thirteenInSeconds) {
