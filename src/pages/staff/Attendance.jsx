@@ -76,11 +76,11 @@ const StaffAttendance = () => {
       // Tuesday staff rule
 
       // Wednesday staff rule
-const thirteenInSeconds = 13 * 3600;
+const thirteenInSeconds = 09 * 3600;
 
 if (type === "checkout" && role === "staff" && dayOfWeek === "Wednesday") {
   if (currentTimeInSeconds < thirteenInSeconds) {
-    setMessage("⚠️ Staff can checkout after 13:00 on Wednesday");
+    setMessage("⚠️ Staff can checkout after 09:00 on Wednesday");
     setLoading(false);
     return;
   }
