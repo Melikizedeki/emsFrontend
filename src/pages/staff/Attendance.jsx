@@ -74,14 +74,18 @@ const StaffAttendance = () => {
       const currentTimeInSeconds = hours * 3600 + minutes * 60 + seconds;
 
       // Tuesday staff rule
-      const thirteenInSeconds = 13 * 3600;
-      if (type === "checkout" && role === "staff" && dayOfWeek === "Tuesday") {
-        if (currentTimeInSeconds < thirteenInSeconds) {
-          setMessage("⚠️ Staff can checkout after 13:00 on Tuesday");
-          setLoading(false);
-          return;
-        }
-      }
+
+      // Wednesday staff rule
+const thirteenInSeconds = 13 * 3600;
+
+if (type === "checkout" && role === "staff" && dayOfWeek === "Wednesday") {
+  if (currentTimeInSeconds < thirteenInSeconds) {
+    setMessage("⚠️ Staff can checkout after 13:00 on Wednesday");
+    setLoading(false);
+    return;
+  }
+}
+
 
       // Day shift checkout 18:00-18:59
       const eighteenInSeconds = 18 * 3600;
@@ -121,11 +125,14 @@ const StaffAttendance = () => {
         }
       }
 
+
       const res = await api.post(`/api/attendance/${type}`, {
-        numerical_id: numericalId,
-        latitude: loc.latitude,
-        longitude: loc.longitude,
-      });
+  numerical_id: numericalId,
+  latitude: loc.latitude,
+  longitude: loc.longitude,
+  role, // ✅ REQUIRED
+});
+
 
       setMessage(res.data.message);
       fetchAttendance(numericalId);
