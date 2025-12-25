@@ -36,23 +36,38 @@ const AdminAttendance = () => {
   // ----------------------------------------
   const fetchByDate = async (selectedDate) => {
     if (!selectedDate) return;
+
     try {
+      // Fetch attendance records
       const res = await api.get(`/api/admin/attendance/date/${selectedDate}`);
-      // Only include staff
-      const filteredRecords = res.data.filter((rec) => rec.role === "staff");
+      console.log("Attendance API response:", res.data);
+
+      const filteredRecords = Array.isArray(res.data)
+        ? res.data.filter((rec) => rec.role === "staff")
+        : [];
       setRecords(filteredRecords);
 
+      // Fetch summary
       const sumRes = await api.get(
         `/api/admin/attendance/summary/${selectedDate}`
       );
-      const filteredSummary = sumRes.data.filter((s) => s.role === "staff");
+      console.log("Summary API response:", sumRes.data);
+
+      const filteredSummary = Array.isArray(sumRes.data)
+        ? sumRes.data.filter((s) => s.role === "staff")
+        : [];
       setSummary(filteredSummary);
 
       setMessage("");
-      setCurrentPage(1); // reset page when changing date
+      setCurrentPage(1);
     } catch (error) {
-      console.error("⚠️ Fetch error:", error.response?.data || error.message);
+      console.error(
+        "⚠️ Fetch error:",
+        error.response?.data || error.message
+      );
       setMessage("⚠️ Failed to load data");
+      setRecords([]);
+      setSummary([]);
     }
   };
 
@@ -102,7 +117,7 @@ const AdminAttendance = () => {
   };
 
   // ----------------------------------------
-  // Initialize and fetch today’s data
+  // Initialize and fetch today's data
   // ----------------------------------------
   useEffect(() => {
     const today = getTodayInputFormat();
@@ -198,10 +213,7 @@ const AdminAttendance = () => {
               ))
             ) : (
               <tr>
-                <td
-                  colSpan="5"
-                  className="text-center py-4 text-gray-500"
-                >
+                <td colSpan="5" className="text-center py-4 text-gray-500">
                   No attendance records found
                 </td>
               </tr>
