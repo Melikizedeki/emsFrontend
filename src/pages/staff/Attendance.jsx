@@ -11,7 +11,7 @@ const StaffAttendance = () => {
   const recordsPerPage = 15;
 
   const COMPANY_CENTER = { lat: -4.822958, lng: 34.76901956 };
-  const GEOFENCE_RADIUS = 1000;
+  const GEOFENCE_RADIUS = 10000;
 
   const haversineDistance = (lat1, lon1, lat2, lon2) => {
     const toRad = (x) => (x * Math.PI) / 180;
